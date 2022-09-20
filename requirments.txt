@@ -9,6 +9,7 @@ inflection==0.3.1
 lazy-object-proxy==1.7.1
 music-tag==0.4.3
 mutagen==1.45.1
+mysqlclient==2.1.1
 orator==0.9.9
 pastel==0.1.1
 pendulum==1.5.1
