@@ -71,6 +71,10 @@ keys = {
         "en": "Which tag do you want to edit?",
         "fa": "چه تگی رو میخوای ویرایش کنی؟",
     },
+    ALBUM_ART_CHANGED: {
+        "en": "Album art changed",
+        "fa": "عکس آلبوم تغییر یافت.",
+    },
     ASK_FOR_ALBUM_ART: {
         "en": "Send me a photo:",
         "fa": "یک عکس برام بفرست:",
