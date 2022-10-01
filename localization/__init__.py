@@ -43,9 +43,47 @@ EG_FA = "مثل"
 keys = {
     START_MESSAGE: {
         "en": "Hello there! 👋\n"
-              "Let's get started. Just send me a music and see how awesome I am!",
+              "I'm music jojo; we can do the following together 👇\n\n\n"
+
+              
+              "💿 display and change the complete song profile \n"
+              "✂️ Sampling and cutting the song and converting it to voice \n"
+              "🏞 delete and change the song cover \n"
+              "🎥 convert video to circular video \n"
+              "📷 convert video to gif \n"
+              "🔊 Convert voice to song \n\n"
+
+              "📝 change the caption and remove ads \n"
+              "⏪ Send post and file without name to channel \n\n"
+
+              "[NEW!] \n"
+              "🎵 find songs by voice \n"
+              "📥 Download the song through the download link \n"
+              "📥 Download video via Instagram link \n\n\n"
+
+
+              "⚠️ To start, please send a song/video: (You can download or upload directly!)",
         "fa": "سلام! 👋\n"
-              "خب شروع کنیم. یه موزیک برام بفرست تا ببینی چقدر خفنم!",
+              "موزیک جوجو هستم؛ می‌تونیم کارای زیر رو باهم انجام بدیم 👇\n\n\n"
+
+
+              "💿 نمایش و تغییر مشخصات کامل آهنگ \n"
+              "✂️ نمونه‌گیری و برش آهنگ و تبدیل به وویس \n"
+              "🏞 حذف و تغییر کاور آهنگ \n"
+              "🎥 تبدیل ویدیو به ویدیو دایره‌ای \n"
+              "📷 تبدیل ویدیو به گیف \n"
+              "🔊 تبدیل وویس به آهنگ \n\n"
+
+              "📝 تغییر کپشن و حذف تبلیغات \n"
+              "⏪ ارسال پست و فایل بدون نام به کانال \n\n"
+
+              "[جدید!] \n"
+              "🎵 پیدا کردن آهنگ از روی وویس \n"
+              "📥 دانلود آهنگ از طریق لینک دانلود \n"
+              "📥 دانلود ویدیو از طریق لینک اینستاگرام \n\n\n"
+
+
+              "⚠️ برای شروع لطفا یه آهنگی/فیلمی چیزی بفرست: (می‌تونی فروارد کنی یا مستقیم آپلود کنی!)"
     },
     START_OVER_MESSAGE: {
         "en": "Send me a music and see how awesome I am!",
