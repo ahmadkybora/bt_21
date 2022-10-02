@@ -15,7 +15,7 @@ from telegram import (
 import localization as lp
 from utils import translate_key_to, reset_user_data_context, generate_start_over_keyboard, \
 create_user_directory, download_file, increment_usage_counter_for_user, delete_file, \
-generate_module_selector_keyboard, generate_tag_editor_keyboard, generate_music_info, \
+generate_module_selector_keyboard, generate_module_selector_video_keyboard, generate_tag_editor_keyboard, generate_music_info, \
 save_tags_to_file
 
 from models.admin import Admin
@@ -255,6 +255,7 @@ def handle_video_message(update: Update, context: CallbackContext) -> None:
     user_data = context.user_data
     video_duration = message.video.duration
     video_file_size = message.video.file_size
+    video_mime_type = message.video.mime_type
     old_music_path = user_data['music_path']
     old_art_path = user_data['art_path']
     old_new_art_path = user_data['new_art_path']
@@ -283,7 +284,7 @@ def handle_video_message(update: Update, context: CallbackContext) -> None:
         file_download_path = download_file(
             user_id=user_id,
             file_to_download=message.video,
-            file_type='audio',
+            file_type='video',
             context=context
         )
     except ValueError:
@@ -295,7 +296,7 @@ def handle_video_message(update: Update, context: CallbackContext) -> None:
         return
 
     try:
-        music = music_tag.load_file(file_download_path)
+        video = file_download_path
     except (OSError, NotImplementedError):
         message.reply_text(
             translate_key_to(lp.ERR_ON_READING_TAGS, language),
@@ -311,36 +312,37 @@ def handle_video_message(update: Update, context: CallbackContext) -> None:
 
     reset_user_data_context(context)
 
-    user_data['music_path'] = file_download_path
-    user_data['art_path'] = ''
-    user_data['music_message_id'] = message.message_id
-    user_data['music_duration'] = message.audio.duration
+    user_data['video_path'] = file_download_path
+    user_data['video_message_id'] = message.message_id
+    user_data['video_duration'] = message.video.duration
+    user_data['video_mimeType'] = message.video.mime_type
 
-    tag_editor_context = user_data['tag_editor']
+    # tag_editor_context = user_data['tag_editor']
 
-    artist = music['artist']
-    title = music['title']
-    album = music['album']
-    genre = music['genre']
-    art = music['artwork']
-    year = music.raw['year']
-    disknumber = music.raw['disknumber']
-    tracknumber = music.raw['tracknumber']
+    # artist = music['artist']
+    # title = music['title']
+    # album = music['album']
+    # genre = music['genre']
+    # art = music['artwork']
+    # year = music.raw['year']
+    # disknumber = music.raw['disknumber']
+    # tracknumber = music.raw['tracknumber']
 
-    if art:
-        art_path = user_data['art_path'] = f"{file_download_path}.jpg"
-        with open(art_path, 'wb') as art_file:
-            art_file.write(art.first.data)
+    # if art:
+    #     art_path = user_data['art_path'] = f"{file_download_path}.jpg"
+    #     with open(art_path, 'wb') as art_file:
+    #         art_file.write(art.first.data)
 
-    tag_editor_context['artist'] = str(artist)
-    tag_editor_context['title'] = str(title)
-    tag_editor_context['album'] = str(album)
-    tag_editor_context['genre'] = str(genre)
-    tag_editor_context['year'] = str(year)
-    tag_editor_context['disknumber'] = str(disknumber)
-    tag_editor_context['tracknumber'] = str(tracknumber)
-
-    show_module_selector(update, context)
+    # tag_editor_context['artist'] = str(artist)
+    # tag_editor_context['title'] = str(title)
+    # tag_editor_context['album'] = str(album)
+    # tag_editor_context['genre'] = str(genre)
+    # tag_editor_context['year'] = str(year)
+    # tag_editor_context['disknumber'] = str(disknumber)
+    # tag_editor_context['tracknumber'] = str(tracknumber)
+    # logger.info("A user with id %s has been started to use the bot.", user_data)
+    # show_module_selector(update, context)
+    show_module_selector_video(update, context)
 
     increment_usage_counter_for_user(user_id=user_id)
 
@@ -348,12 +350,52 @@ def handle_video_message(update: Update, context: CallbackContext) -> None:
     user.username = update.effective_user.username
     user.push()
 
-    delete_file(old_music_path)
-    delete_file(old_art_path)
-    delete_file(old_new_art_path)
+    # delete_file(old_music_path)
+    # delete_file(old_art_path)
+    # delete_file(old_new_art_path)
 
-def convert_webpm_to_mp4(update: Update, context: CallbackContext) -> None:
-    pass
+def show_module_selector_video(update: Update, context: CallbackContext) -> None:
+    user_data = context.user_data
+    context.user_data['current_active_module'] = ''
+    lang = user_data['language']
+
+    module_selector_keyboard = generate_module_selector_video_keyboard(lang)
+
+    update.message.reply_text(
+        translate_key_to(lp.ASK_WHICH_MODULE, lang),
+        reply_to_message_id=update.effective_message.message_id,
+        reply_markup=module_selector_keyboard
+    )
+
+def convert_mp4_to_webm(update: Update, context: CallbackContext) -> None:
+    message = update.message
+    user_data = context.user_data
+    video_path = user_data['video_path']
+    lang = user_data['language']
+
+    user_data['current_active_module'] = 'tag_editor'
+
+    tag_editor_context = user_data['tag_editor']
+    tag_editor_context['current_tag'] = ''
+
+    tag_editor_keyboard = generate_tag_editor_keyboard(lang)
+
+    if video_path:
+        with open(video_path, 'rb') as video_file:
+            message.reply_video(
+                photo=video_file,
+                caption=generate_music_info(tag_editor_context).format(f"\n🆔 {BOT_USERNAME}"),
+                reply_to_message_id=update.effective_message.message_id,
+                reply_markup=tag_editor_keyboard,
+                parse_mode='Markdown'
+            )
+    else:
+        message.reply_text(
+            generate_music_info(tag_editor_context).format(f"\n🆔 {BOT_USERNAME}"),
+            reply_to_message_id=update.effective_message.message_id,
+            reply_markup=tag_editor_keyboard
+        )
+
 def show_module_selector(update: Update, context: CallbackContext) -> None:
     user_data = context.user_data
     context.user_data['current_active_module'] = ''
@@ -484,19 +526,19 @@ def display_preview(update: Update, context: CallbackContext) -> None:
 def main():
     defaults = Defaults(parse_mode=ParseMode.MARKDOWN, timeout=120)
     persistence = PicklePersistence('persistence_storage')
-
+    ##########
     updater = Updater(BOT_TOKEN, persistence=persistence, defaults=defaults)
     add_handler = updater.dispatcher.add_handler
-
+    ##########
     add_handler(CommandHandler('start', command_start))
     add_handler(CommandHandler('new', start_over))
     add_handler(CommandHandler('language', show_language_keyboard))
     add_handler(CommandHandler('help', command_help))
     add_handler(CommandHandler('about', command_about))
-
+    ##########
     add_handler(CommandHandler('done', finish_editing_tags))
     add_handler(CommandHandler('preview', display_preview))
-
+    ##########
     add_handler(MessageHandler(
         (Filters.regex('^(🆕 New File)$') | Filters.regex('^(🆕 فایل جدید)$')),
         start_over)
@@ -505,22 +547,27 @@ def main():
         (Filters.regex('^(🎵 Tag Editor)$') | Filters.regex('^(🎵 تغییر تگ ها)$')),
         handle_music_tag_editor)
     )
-
+    ##########
+    add_handler(MessageHandler(
+        (Filters.regex('^(🎥 convert video to circular video)$') | Filters.regex('^(🎥 تبدیل ویدیو به ویدیو دایره‌ای)$')),
+        convert_mp4_to_webm)
+    )
+    ##########
     add_handler(CommandHandler('done', finish_editing_tags))
     add_handler(CommandHandler('preview', display_preview))
-
+    ##########
     add_handler(MessageHandler(
         (Filters.regex('^(🖼 Album Art)$') | Filters.regex('^(🖼 عکس آلبوم)$')),
         prepare_for_album_art)
     )
-
+    ##########
     add_handler(MessageHandler(Filters.audio, handle_music_message))
     add_handler(MessageHandler(Filters.photo, handle_photo_message))
     add_handler(MessageHandler(Filters.video, handle_video_message))
-
+    ##########
     add_handler(MessageHandler(Filters.regex('^(🇬🇧 English)$'), set_language))
     add_handler(MessageHandler(Filters.regex('^(🇮🇷 فارسی)$'), set_language))
-
+    ##########
     updater.start_polling()
     updater.idle()
 

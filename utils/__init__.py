@@ -92,6 +92,10 @@ def reset_user_data_context(context: CallbackContext) -> None:
         delete_file(user_data['new_art_path'])
 
     new_user_data = {
+        'video_path': '',
+        'video_message_id': '',
+        'video_duration': '',
+        'video_mimeType': '',
         'tag_editor': {},
         'music_path': '',
         'music_duration': 0,
@@ -144,6 +148,10 @@ def download_file(user_id: int, file_to_download, file_type: str, context: Callb
     elif file_type == 'photo':
         file_id = context.bot.get_file(file_to_download.file_id)
         file_extension = 'jpg'
+    elif file_type == 'video':
+        file_id = context.bot.get_file(file_to_download.file_id)
+        file_name = file_to_download.file_name
+        file_extension = file_name.split(".")[-1]
 
     file_download_path = f"{user_download_dir}/{file_id.file_id}.{file_extension}"
 
@@ -197,6 +205,27 @@ def generate_module_selector_keyboard(language: str) -> ReplyKeyboardMarkup:
         )
     )
 
+def generate_module_selector_video_keyboard(language: str) -> ReplyKeyboardMarkup:
+    """Create an return an instance of `module_selector_keyboard`
+
+
+    **Keyword arguments:**
+     - language (str) -- The desired language to generate labels
+
+    **Returns:**
+     ReplyKeyboardMarkup instance
+    """
+    return (
+        ReplyKeyboardMarkup(
+            [
+                [
+                    translate_key_to('BTN_CONVERT_VIDEO_TO_CIRCLE', language),
+                ],
+            ],
+            resize_keyboard=True,
+            one_time_keyboard=True,
+        )
+    )
 
 def generate_tag_editor_keyboard(language: str) -> ReplyKeyboardMarkup:
     """Create an return an instance of `tag_editor_keyboard`

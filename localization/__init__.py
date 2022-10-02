@@ -28,6 +28,7 @@ ERR_NOT_IMPLEMENTED = "ERR_NOT_IMPLEMENTED"
 ERR_OUT_OF_RANGE = "ERR_OUT_OF_RANGE"
 ERR_MALFORMED_RANGE = "ERR_MALFORMED_RANGE"
 BTN_TAG_EDITOR = "BTN_TAG_EDITOR"
+BTN_CONVERT_VIDEO_TO_CIRCLE = "BTN_CONVERT_VIDEO_TO_CIRCLE"
 BTN_MUSIC_TO_VOICE_CONVERTER = "BTN_MUSIC_TO_VOICE_CONVERTER"
 BTN_ALBUM = "BTN_ALBUM"
 BTN_ALBUM_ART = "BTN_ALBUM_ART"
@@ -177,6 +178,10 @@ keys = {
     BTN_TAG_EDITOR: {
         "en": "🎵 Tag Editor",
         "fa": "🎵 تغییر تگ ها",
+    },
+    BTN_CONVERT_VIDEO_TO_CIRCLE: {
+        "en": "🎥 convert video to circular video",
+        "fa": "🎥 تبدیل ویدیو به ویدیو دایره‌ای",
     },
     BTN_ALBUM: {
         "en": "🎼 Album",
