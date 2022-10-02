@@ -18,6 +18,7 @@ MUSIC_LENGTH = "MUSIC_LENGTH"
 REPORT_BUG_MESSAGE = "REPORT_BUG_MESSAGE"
 ERR_CREATING_USER_FOLDER = "ERR_CREATING_USER_FOLDER"
 ERR_ON_DOWNLOAD_AUDIO_MESSAGE = "ERR_ON_DOWNLOAD_AUDIO_MESSAGE"
+ERR_ON_DOWNLOAD_VIDEO_MESSAGE = "ERR_ON_DOWNLOAD_VIDEO_MESSAGE"
 ERR_ON_DOWNLOAD_PHOTO_MESSAGE = "ERR_ON_DOWNLOAD_PHOTO_MESSAGE"
 ERR_TOO_LARGE_FILE = "ERR_TOO_LARGE_FILE"
 ERR_ON_READING_TAGS = "ERR_ON_READING_TAGS"
@@ -146,6 +147,10 @@ keys = {
         "fa": f"متاسفم، نتونستم فایلت رو دانلود کنم... {REPORT_BUG_MESSAGE_FA}",
     },
     ERR_ON_DOWNLOAD_PHOTO_MESSAGE: {
+        "en": f"Sorry, I couldn't download your file... {REPORT_BUG_MESSAGE_EN}",
+        "fa": f"متاسفم، نتونستم فایلت رو دانلود کنم... {REPORT_BUG_MESSAGE_FA}",
+    },
+    ERR_ON_DOWNLOAD_VIDEO_MESSAGE: {
         "en": f"Sorry, I couldn't download your file... {REPORT_BUG_MESSAGE_EN}",
         "fa": f"متاسفم، نتونستم فایلت رو دانلود کنم... {REPORT_BUG_MESSAGE_FA}",
     },

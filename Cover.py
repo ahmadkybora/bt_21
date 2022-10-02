@@ -249,6 +249,111 @@ def handle_photo_message(update: Update, context: CallbackContext) -> None:
         reply_message = translate_key_to(lp.DEFAULT_MESSAGE, lang)
         message.reply_text(reply_message, reply_markup=ReplyKeyboardRemove())
 
+def handle_video_message(update: Update, context: CallbackContext) -> None:
+    message = update.message
+    user_id = update.effective_user.id
+    user_data = context.user_data
+    video_duration = message.video.duration
+    video_file_size = message.video.file_size
+    old_music_path = user_data['music_path']
+    old_art_path = user_data['art_path']
+    old_new_art_path = user_data['new_art_path']
+    language = user_data['language']
+
+    if video_duration >= 3600 and video_file_size > 48000000:
+        message.reply_text(
+            translate_key_to(lp.ERR_TOO_LARGE_FILE, language),
+            reply_markup=generate_start_over_keyboard(language)
+        )
+        return
+
+    context.bot.send_chat_action(
+        chat_id=message.chat_id,
+        action=ChatAction.TYPING
+    )
+
+    try:
+        create_user_directory(user_id)
+    except OSError:
+        message.reply_text(translate_key_to(lp.ERR_CREATING_USER_FOLDER, language))
+        logger.error("Couldn't create directory for user %s", user_id, exc_info=True)
+        return
+
+    try:
+        file_download_path = download_file(
+            user_id=user_id,
+            file_to_download=message.video,
+            file_type='audio',
+            context=context
+        )
+    except ValueError:
+        message.reply_text(
+            translate_key_to(lp.ERR_ON_DOWNLOAD_VIDEO_MESSAGE, language),
+            reply_markup=generate_start_over_keyboard(language)
+        )
+        logger.error("Error on downloading %s's file. File type: Video", user_id, exc_info=True)
+        return
+
+    try:
+        music = music_tag.load_file(file_download_path)
+    except (OSError, NotImplementedError):
+        message.reply_text(
+            translate_key_to(lp.ERR_ON_READING_TAGS, language),
+            reply_markup=generate_start_over_keyboard(language)
+        )
+        logger.error(
+            "Error on reading the tags %s's file. File path: %s",
+            user_id,
+            file_download_path,
+            exc_info=True
+        )
+        return
+
+    reset_user_data_context(context)
+
+    user_data['music_path'] = file_download_path
+    user_data['art_path'] = ''
+    user_data['music_message_id'] = message.message_id
+    user_data['music_duration'] = message.audio.duration
+
+    tag_editor_context = user_data['tag_editor']
+
+    artist = music['artist']
+    title = music['title']
+    album = music['album']
+    genre = music['genre']
+    art = music['artwork']
+    year = music.raw['year']
+    disknumber = music.raw['disknumber']
+    tracknumber = music.raw['tracknumber']
+
+    if art:
+        art_path = user_data['art_path'] = f"{file_download_path}.jpg"
+        with open(art_path, 'wb') as art_file:
+            art_file.write(art.first.data)
+
+    tag_editor_context['artist'] = str(artist)
+    tag_editor_context['title'] = str(title)
+    tag_editor_context['album'] = str(album)
+    tag_editor_context['genre'] = str(genre)
+    tag_editor_context['year'] = str(year)
+    tag_editor_context['disknumber'] = str(disknumber)
+    tag_editor_context['tracknumber'] = str(tracknumber)
+
+    show_module_selector(update, context)
+
+    increment_usage_counter_for_user(user_id=user_id)
+
+    user = User.where('user_id', '=', user_id).first()
+    user.username = update.effective_user.username
+    user.push()
+
+    delete_file(old_music_path)
+    delete_file(old_art_path)
+    delete_file(old_new_art_path)
+
+def convert_webpm_to_mp4(update: Update, context: CallbackContext) -> None:
+    pass
 def show_module_selector(update: Update, context: CallbackContext) -> None:
     user_data = context.user_data
     context.user_data['current_active_module'] = ''
@@ -411,6 +516,7 @@ def main():
 
     add_handler(MessageHandler(Filters.audio, handle_music_message))
     add_handler(MessageHandler(Filters.photo, handle_photo_message))
+    add_handler(MessageHandler(Filters.video, handle_video_message))
 
     add_handler(MessageHandler(Filters.regex('^(🇬🇧 English)$'), set_language))
     add_handler(MessageHandler(Filters.regex('^(🇮🇷 فارسی)$'), set_language))
