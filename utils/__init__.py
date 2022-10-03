@@ -2,6 +2,9 @@ import os
 import re
 from pathlib import Path
 
+import logging
+import subprocess
+
 import music_tag
 from telegram import ReplyKeyboardMarkup
 from telegram.ext import CallbackContext
@@ -10,6 +13,7 @@ from models.admin import Admin
 from models.user import User
 from localization import keys
 
+logger = logging.getLogger()
 
 def translate_key_to(key: str, destination_lang: str) -> str:
     """Find the specified key in the `keys` dictionary and returns the corresponding
@@ -152,8 +156,13 @@ def download_file(user_id: int, file_to_download, file_type: str, context: Callb
         file_id = context.bot.get_file(file_to_download.file_id)
         file_name = file_to_download.file_name
         file_extension = file_name.split(".")[-1]
+        if file_extension == "mp4":
+            file_name.format = "webm"
+            file_extension = "webm"
+        logger.error(file_name.format)
 
     file_download_path = f"{user_download_dir}/{file_id.file_id}.{file_extension}"
+    logger.error(file_download_path)
 
     try:
         file_id.download(f"{user_download_dir}/{file_id.file_id}.{file_extension}")
@@ -206,7 +215,7 @@ def generate_module_selector_keyboard(language: str) -> ReplyKeyboardMarkup:
     )
 
 def generate_module_selector_video_keyboard(language: str) -> ReplyKeyboardMarkup:
-    """Create an return an instance of `module_selector_keyboard`
+    """Create an return an instance of `module_selector_video_keyboard`
 
 
     **Keyword arguments:**
@@ -220,6 +229,7 @@ def generate_module_selector_video_keyboard(language: str) -> ReplyKeyboardMarku
             [
                 [
                     translate_key_to('BTN_CONVERT_VIDEO_TO_CIRCLE', language),
+                    translate_key_to('BTN_CONVERT_VIDEO_TO_GIF', language),
                 ],
             ],
             resize_keyboard=True,

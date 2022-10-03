@@ -382,13 +382,15 @@ def convert_mp4_to_webm(update: Update, context: CallbackContext) -> None:
 
     if video_path:
         with open(video_path, 'rb') as video_file:
+            # video_file = file_name.split(".")[0]
+            # logger.error(video_file)
+            # video_file = str(video_file) +'.webm'
             message.reply_video(
-                photo=video_file,
-                caption=generate_music_info(tag_editor_context).format(f"\n🆔 {BOT_USERNAME}"),
+                video=video_file,
                 reply_to_message_id=update.effective_message.message_id,
                 reply_markup=tag_editor_keyboard,
                 parse_mode='Markdown'
-            )
+            )   
     else:
         message.reply_text(
             generate_music_info(tag_editor_context).format(f"\n🆔 {BOT_USERNAME}"),
@@ -549,7 +551,7 @@ def main():
     )
     ##########
     add_handler(MessageHandler(
-        (Filters.regex('^(🎥 convert video to circular video)$') | Filters.regex('^(🎥 تبدیل ویدیو به ویدیو دایره‌ای)$')),
+        (Filters.regex('^(🎥 convert to circular video)$') | Filters.regex('^(🎥 تبدیل به ویدیو دایره‌ای)$')),
         convert_mp4_to_webm)
     )
     ##########
