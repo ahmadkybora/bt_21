@@ -379,12 +379,19 @@ def convert_mp4_to_webm(update: Update, context: CallbackContext) -> None:
     tag_editor_context['current_tag'] = ''
 
     tag_editor_keyboard = generate_tag_editor_keyboard(lang)
+    chat_id = update.message.chat_id
 
     if video_path:
-        with open(video_path, 'rb') as video_file:
+        with open(video_path.format(chat_id, 'webm'), 'rb') as video_file:
             # video_file = file_name.split(".")[0]
             # logger.error(video_file)
-            # video_file = str(video_file) +'.webm'
+            #   video_file = str(video_file) +'.webm'
+
+            # context.bot.send_document(
+            #     chat_id=chat_id, 
+            #     document=open('./output_media/{}.{}'.format(chat_id, 'webm'), 'rb'), 
+            #     caption="Here is your file!"
+            # )
             message.reply_video(
                 video=video_file,
                 reply_to_message_id=update.effective_message.message_id,
