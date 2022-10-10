@@ -254,8 +254,8 @@ def handle_video_message(update: Update, context: CallbackContext) -> None:
     video_duration = message.video.duration
     video_file_size = message.video.file_size
     old_video_path = user_data['video_path']
-    old_video_art_path = user_data['video_art_path']
-    old_new_video_art_path = user_data['new_video_art_path']
+    # old_video_art_path = user_data['video_art_path']
+    # old_new_video_art_path = user_data['new_video_art_path']
     language = user_data['language']
 
     if video_duration >= 3600 and video_file_size > 48000000:
@@ -310,9 +310,9 @@ def handle_video_message(update: Update, context: CallbackContext) -> None:
     reset_user_data_context(context)
 
     user_data['video_path'] = file_download_path
+    # user_data['video_art_path'] = ''
     user_data['video_message_id'] = message.message_id
     user_data['video_duration'] = message.video.duration
-    user_data['video_mimeType'] = message.video.mime_type
 
     # tag_editor_context = user_data['tag_editor']
 
@@ -348,8 +348,8 @@ def handle_video_message(update: Update, context: CallbackContext) -> None:
     user.push()
 
     delete_file(old_video_path)
-    delete_file(old_video_art_path)
-    delete_file(old_new_video_art_path)
+    # delete_file(old_video_art_path)
+    # delete_file(old_new_video_art_path)
 
 def show_module_selector_video(update: Update, context: CallbackContext) -> None:
     user_data = context.user_data
@@ -364,8 +364,9 @@ def show_module_selector_video(update: Update, context: CallbackContext) -> None
         reply_markup=module_selector_keyboard
     )
 
-def convert_mp4_to_webm(update: Update, context: CallbackContext) -> None:
+def handle_convert_video_message(update: Update, context: CallbackContext) -> None:
     message = update.message
+    user_id = update.effective_user.id
     user_data = context.user_data
     video_path = user_data['video_path']
     lang = user_data['language']
@@ -378,12 +379,33 @@ def convert_mp4_to_webm(update: Update, context: CallbackContext) -> None:
     tag_editor_keyboard = generate_tag_editor_video_keyboard(lang)
 
     if video_path:
-        with open(video_path, 'rb') as video_file:
-            message.reply_video_note(
-                video_note=video_file,
-                reply_to_message_id=update.effective_message.message_id,
-                reply_markup=tag_editor_keyboard,
+        # with open(video_path, 'rb') as video_file:
+        #     message.reply_video_note(
+        #         video_note=video_file,
+        #         reply_to_message_id=update.effective_message.message_id,
+        #         reply_markup=tag_editor_keyboard,
+        #     )
+        try:
+            # file_download_path = download_file(
+            #     user_id=user_id,
+            #     file_to_download=message.photo[len(message.photo) - 1],
+            #     file_type='photo',
+            #     context=context
+            # )
+            reply_message = f"{translate_key_to(lp.ALBUM_ART_CHANGED, lang)} " \
+                            f"{translate_key_to(lp.CLICK_VPREVIEW_MESSAGE, lang)} " \
+                            f"{translate_key_to(lp.OR, lang).upper()} " \
+                            f"{translate_key_to(lp.CLICK_VDONE_MESSAGE, lang).lower()}"
+            user_data['video_path'] = video_path
+            message.reply_text(reply_message, reply_markup=tag_editor_keyboard)
+        except (ValueError, BaseException):
+            message.reply_text(translate_key_to(lp.ERR_ON_DOWNLOAD_AUDIO_MESSAGE, lang))
+            logger.error(
+                "Error on downloading %s's file. File type: Photo",
+                user_id,
+                exc_info=True
             )
+            return
     else:
         message.reply_text(
             generate_music_info(tag_editor_context).format(f"\n🆔 {BOT_USERNAME}"),
@@ -441,6 +463,66 @@ def prepare_for_album_art(update: Update, context: CallbackContext) -> None:
         message_text = translate_key_to(lp.ASK_FOR_ALBUM_ART, context.user_data['language'])
 
     update.message.reply_text(message_text)
+
+def finish_convert_video(update: Update, context: CallbackContext) -> None:
+    message = update.message
+    user_data = context.user_data
+
+    context.bot.send_chat_action(
+        chat_id=update.message.chat_id,
+        action=ChatAction.UPLOAD_AUDIO
+    )
+
+    video_path = user_data['video_path']
+
+    lang = user_data['language']
+    video_file = open(video_path, 'rb').read()
+
+    start_over_button_keyboard = generate_start_over_keyboard(lang)
+
+    # try:
+    #     save_tags_to_file(
+    #         file=music_path,
+    #         tags=music_tags,
+    #         new_art_path=new_art_path
+    #     )
+    # except (OSError, BaseException):
+    #     message.reply_text(
+    #         translate_key_to(lp.ERR_ON_UPDATING_TAGS, lang),
+    #         reply_markup=start_over_button_keyboard
+    #     )
+    #     logger.error("Error on updating tags for file %s's file.", music_path, exc_info=True)
+    #     return
+
+    try:
+        with open(video_path, 'rb') as video_file:
+            message.reply_video_note(
+                video_note=video_file,
+                reply_to_message_id=update.effective_message.message_id,
+                reply_markup=start_over_button_keyboard,
+            )
+        # with open(music_path, 'rb') as music_file:
+
+        #     context.bot.send_audio(
+        #         audio=music_file,
+        #         duration=user_data['music_duration'],
+        #         chat_id=update.message.chat_id,
+        #         caption=f"🆔 {BOT_USERNAME}",
+        #         thumb=thumb,
+        #         reply_markup=start_over_button_keyboard,
+        #         reply_to_message_id=user_data['music_message_id']
+        #     )
+    except (TelegramError, BaseException) as error:
+        message.reply_text(
+            translate_key_to(lp.ERR_ON_UPLOADING, lang),
+            reply_markup=start_over_button_keyboard
+        )
+        logger.exception("Telegram error: %s", error)
+
+    reset_user_data_context(context)
+
+def display_preview_video(update: Update, context: CallbackContext) -> None:
+    pass
 
 def finish_editing_tags(update: Update, context: CallbackContext) -> None:
     message = update.message
@@ -531,8 +613,8 @@ def main():
     add_handler(CommandHandler('help', command_help))
     add_handler(CommandHandler('about', command_about))
     ##########
-    add_handler(CommandHandler('done', finish_editing_tags))
-    add_handler(CommandHandler('preview', display_preview))
+    add_handler(CommandHandler('vdone', finish_convert_video))
+    add_handler(CommandHandler('vpreview', display_preview_video))
     ##########
     add_handler(MessageHandler(
         (Filters.regex('^(🆕 New File)$') | Filters.regex('^(🆕 فایل جدید)$')),
@@ -545,7 +627,7 @@ def main():
     ##########
     add_handler(MessageHandler(
         (Filters.regex('^(🎥 convert to circular video)$') | Filters.regex('^(🎥 تبدیل به ویدیو دایره‌ای)$')),
-        convert_mp4_to_webm)
+        handle_convert_video_message)
     )
     ##########
     add_handler(CommandHandler('done', finish_editing_tags))

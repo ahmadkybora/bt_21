@@ -89,12 +89,19 @@ def reset_user_data_context(context: CallbackContext) -> None:
         delete_file(user_data['art_path'])
     if 'new_art_path' in user_data:
         delete_file(user_data['new_art_path'])
+    if 'video_path' in user_data:
+        delete_file(user_data['video_path'])
+    if 'video_art_path' in user_data:
+        delete_file(user_data['video_art_path'])
+    if 'new_video_art_path' in user_data:
+        delete_file(user_data['new_video_art_path'])
 
     new_user_data = {
         'video_path': '',
+        'video_art_path': '',
+        'new_video_art_path': '',
         'video_message_id': '',
         'video_duration': '',
-        'video_mimeType': '',
         'tag_editor': {},
         'music_path': '',
         'music_duration': 0,

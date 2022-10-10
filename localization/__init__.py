@@ -13,6 +13,8 @@ ALBUM_ART_CHANGED = "ALBUM_ART_CHANGED"
 EXPECTED_NUMBER_MESSAGE = "EXPECTED_NUMBER_MESSAGE"
 CLICK_PREVIEW_MESSAGE = "CLICK_PREVIEW_MESSAGE"
 CLICK_DONE_MESSAGE = "CLICK_DONE_MESSAGE"
+CLICK_VPREVIEW_MESSAGE = "CLICK_VPREVIEW_MESSAGE"
+CLICK_VDONE_MESSAGE = "CLICK_VDONE_MESSAGE"
 LANGUAGE_CHANGED = "LANGUAGE_CHANGED"
 MUSIC_LENGTH = "MUSIC_LENGTH"
 REPORT_BUG_MESSAGE = "REPORT_BUG_MESSAGE"
@@ -127,6 +129,14 @@ keys = {
     CLICK_DONE_MESSAGE: {
         "en": "Click /done to save your changes.",
         "fa": "روی /done کلیک کن تا تغییراتت ذخیره بشن.",
+    },
+    CLICK_VPREVIEW_MESSAGE: {
+        "en": "If you want to preview your changes click /vpreview.",
+        "fa": "اگر میخوای تغییرات رو تا الان ببینی از دستور /vpreview استفاده کن.",
+    },
+    CLICK_VDONE_MESSAGE: {
+        "en": "Click /vdone to save your changes.",
+        "fa": "روی /vdone کلیک کن تا تغییراتت ذخیره بشن.",
     },
     LANGUAGE_CHANGED: {
         "en": "Language has been changed. If you want to change the language later, use /language command.",
