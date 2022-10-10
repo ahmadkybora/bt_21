@@ -1,6 +1,16 @@
 import os
-
+import re
 from pathlib import Path
+
+import logging
+import subprocess
+
+import ffmpeg
+
+import ffmpy, os, pyheif
+from PIL import Image
+
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
 import music_tag
 from telegram import ReplyKeyboardMarkup
@@ -9,6 +19,8 @@ from telegram.ext import CallbackContext
 from models.admin import Admin
 from models.user import User
 from localization import keys
+
+logger = logging.getLogger()
 
 def translate_key_to(key: str, destination_lang: str) -> str:
     """Find the specified key in the `keys` dictionary and returns the corresponding
@@ -151,8 +163,15 @@ def download_file(user_id: int, file_to_download, file_type: str, context: Callb
         file_id = context.bot.get_file(file_to_download.file_id)
         file_name = file_to_download.file_name
         file_extension = file_name.split(".")[-1]
+        # if file_extension == "mp4":
+        #     file_name.format = "webm"
+        #     file_extension = "webm"
+        # logger.error(file_name)
 
+    # convert_mp4_to_webm_subprocess()
+    # convert_mp4_to_webm_module()
     file_download_path = f"{user_download_dir}/{file_id.file_id}.{file_extension}"
+    # logger.error(file_download_path)
 
     try:
         file_id.download(f"{user_download_dir}/{file_id.file_id}.{file_extension}")
@@ -302,3 +321,105 @@ def save_tags_to_file(file: str, tags: dict, new_art_path: str) -> str:
     music.save()
 
     return file
+
+def convert_mp4_to_webm_subprocess(input_file, output_file):
+    try:
+        command = 'ffmpeg -i ' + input_file + ' ' + output_file
+        subprocess.run(command)
+    except:
+        print("ok")
+
+def convert_mp4_to_webm_module(input_file, output_file):
+    try:
+        stream = ffmpeg.input(input_file)
+        stream = ffmpeg.output(stream, output_file)
+        ffmpeg.run(stream)
+    except:
+        print("ok")
+
+def convert_video(chat_id, input_type, output_type):
+	"""
+	The function converts video of one type to another.
+	Args:
+		chat_id: unique identification for video
+		input_type: video input type
+		output_type: video output type
+	"""
+	inputs = {'./input_media/{}.{}'.format(chat_id, input_type): None}
+	if output_type == "gif":
+		outputs = {'./output_media/{}.{}'.format(chat_id, output_type): '-t 3 -vf "fps=30,scale=320:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse" -loop 0'}
+	else:
+		outputs = {'./output_media/{}.{}'.format(chat_id, output_type): None}
+	ff = ffmpy.FFmpeg(
+	    inputs=inputs,
+	    outputs=outputs
+	)
+	ff.run()
+	return None
+
+def convert_image(chat_id, input_type, output_type):
+	"""
+	The function converts image of one type to another.
+	Args:
+		chat_id: unique identification for image
+		input_type: video input type
+		output_type: video output type
+	"""
+	if (input_type == "heif"):
+		heif_file = pyheif.read('./input_media/{}.{}'.format(chat_id, input_type))
+		img = Image.frombytes(
+		    heif_file.mode, 
+		    heif_file.size, 
+		    heif_file.data,
+		    "raw",
+		    heif_file.mode,
+		    heif_file.stride)
+	else:
+		img = Image.open('./input_media/{}.{}'.format(chat_id, input_type))
+	if output_type == "jpg" or ((input_type == "tiff" or input_type == "png") and output_type == "pdf"):
+		img = img.convert('RGB')
+	elif output_type == "ico":
+		icon_size = [(32, 32)]
+		img.save('./output_media/{}.{}'.format(chat_id, output_type), sizes=icon_size)
+		return None
+	img.save('./output_media/{}.{}'.format(chat_id, output_type), quality=95, optimize=True)
+	return None
+
+def build_menu(buttons, header_buttons=None, footer_buttons=None):
+    """
+    Function to build the menu buttons to show users.
+    """
+    menu = [buttons[i] for i in range(0, len(buttons))]
+    if header_buttons:
+        menu.insert(0, header_buttons)
+    if footer_buttons:
+        menu.append(footer_buttons)
+    return menu
+
+def show_options(n_rows, text, media_type, input_type):
+    """
+    Function that takes in button text and callback data to generate the view.
+    Args:
+        n_rows: rows for button
+        text: list of texts to show
+        media_type: currently supports videos and images
+        input_type: format of video
+    """
+    button_list = []
+    for i in range(0,n_rows):
+        button_list.append([InlineKeyboardButton(text[i], callback_data=media_type + "_" + input_type + "_" + text[i])])
+    reply_markup = InlineKeyboardMarkup(build_menu(button_list))
+    return reply_markup
+
+def check_exist_media(chat_id, input_type):
+    """
+    Function to check if media exist.
+    Args:
+        chat_id: id of user
+        input_type: format of video
+    """
+    #checks if media exist by looking for file with user's username
+    if not os.path.isfile("./input_media/{}.{}".format(str(chat_id), input_type)): 
+        return False
+    directory, filename = os.path.split("./input_media/{}.{}".format(str(chat_id), input_type))
+    return filename in os.listdir(directory)

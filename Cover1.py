@@ -7,16 +7,21 @@ from telegram.error import TelegramError
 from telegram.ext import Updater, CallbackContext, CommandHandler, MessageHandler, Filters, \
      Defaults, PicklePersistence
 from telegram import Update, ReplyKeyboardMarkup, ChatAction, ParseMode, ReplyKeyboardRemove
-from telegram import ( 
+from telegram import (
+    InlineKeyboardButton, 
     ReplyKeyboardMarkup, 
 )
+
+import moviepy
+import moviepy.editor 
 
 import localization as lp
 from utils.__init__1 import translate_key_to, reset_user_data_context, generate_start_over_keyboard, \
 create_user_directory, download_file, increment_usage_counter_for_user, delete_file, \
 generate_module_selector_keyboard, generate_module_selector_video_keyboard, generate_tag_editor_keyboard, \
-generate_music_info, generate_tag_editor_video_keyboard, save_tags_to_file
+generate_music_info, generate_tag_editor_video_keyboard, save_tags_to_file, convert_video
 
+from models.admin import Admin
 from models.user import User
 from dbConfig import db
 
@@ -253,9 +258,10 @@ def handle_video_message(update: Update, context: CallbackContext) -> None:
     user_data = context.user_data
     video_duration = message.video.duration
     video_file_size = message.video.file_size
-    old_video_path = user_data['video_path']
-    old_video_art_path = user_data['video_art_path']
-    old_new_video_art_path = user_data['new_video_art_path']
+    video_mime_type = message.video.mime_type
+    old_music_path = user_data['music_path']
+    old_art_path = user_data['art_path']
+    old_new_art_path = user_data['new_art_path']
     language = user_data['language']
 
     if video_duration >= 3600 and video_file_size > 48000000:
@@ -347,9 +353,9 @@ def handle_video_message(update: Update, context: CallbackContext) -> None:
     user.username = update.effective_user.username
     user.push()
 
-    delete_file(old_video_path)
-    delete_file(old_video_art_path)
-    delete_file(old_new_video_art_path)
+    # delete_file(old_music_path)
+    # delete_file(old_art_path)
+    # delete_file(old_new_art_path)
 
 def show_module_selector_video(update: Update, context: CallbackContext) -> None:
     user_data = context.user_data
@@ -376,14 +382,55 @@ def convert_mp4_to_webm(update: Update, context: CallbackContext) -> None:
     tag_editor_context['current_tag'] = ''
 
     tag_editor_keyboard = generate_tag_editor_video_keyboard(lang)
+    chat_id = update.message.chat_id
 
     if video_path:
+        # with open(video_path.format(chat_id, "webm"), 'rb') as video_file:
         with open(video_path, 'rb') as video_file:
+            # video_file = file_name.split(".")[0]
+            # logger.error(video_file)
+            #   video_file = str(video_file) +'.webm'
+
+            # context.bot.send_document(
+            #     chat_id=chat_id, 
+            #     document=open('./output_media/{}.{}'.format(chat_id, 'webm'), 'rb'), 
+            #     caption="Here is your file!"
+            # )
+            # logger.info(video_file)
+            # convert_video(chat_id, video_path, "webp")
+            # v = moviepy.VideoFileClip(video_path)
+            # v.write_videofile()
+
+            # video = moviepy.editor.VideoFileClip(video_path)
+            # audio = video.audio
+            # video.write_videofile(filename + ".wav")
+
+            # video_file = moviepy.editor.VideoFileClip(video_path)
+            # wav_file_name = video_path.replace('.mp4', '.webm')  # Replace .mkv with .wav
+            # video_file.write_videofile(wav_file_name)
+
+            # context.bot.send_document(
+            #     chat_id=chat_id, 
+            #     document=open(video_path.format(chat_id, "webp"), 'rb'), 
+            #     caption="Here is your file!"
+            # )
+            # context.bot.send_video(
+            #     chat_id=update.message.chat_id, 
+            #     video=open('output.mp4', 'rb'), 
+            #     supports_streaming=True
+            # )
+
             message.reply_video_note(
                 video_note=video_file,
                 reply_to_message_id=update.effective_message.message_id,
                 reply_markup=tag_editor_keyboard,
             )
+            # message.reply_video(
+            #     video=video_file,
+            #     reply_to_message_id=update.effective_message.message_id,
+            #     reply_markup=tag_editor_keyboard,
+            #     parse_mode='Markdown'
+            # )   
     else:
         message.reply_text(
             generate_music_info(tag_editor_context).format(f"\n🆔 {BOT_USERNAME}"),
