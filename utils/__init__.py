@@ -83,6 +83,8 @@ def reset_user_data_context(context: CallbackContext) -> None:
     user_data = context.user_data
     language = user_data['language'] if ('language' in user_data) else 'en'
 
+    if 'voice_path' in user_data:
+        delete_file(user_data['voice_path'])
     if 'music_path' in user_data:
         delete_file(user_data['music_path'])
     if 'art_path' in user_data:
@@ -97,6 +99,9 @@ def reset_user_data_context(context: CallbackContext) -> None:
         delete_file(user_data['new_video_art_path'])
 
     new_user_data = {
+        'voice_path': '',
+        'voice_art_path': '',
+        'new_voice_art_path': '',
         'video_path': '',
         'video_art_path': '',
         'new_video_art_path': '',
@@ -158,6 +163,10 @@ def download_file(user_id: int, file_to_download, file_type: str, context: Callb
         file_id = context.bot.get_file(file_to_download.file_id)
         file_name = file_to_download.file_name
         file_extension = file_name.split(".")[-1]
+    elif file_type == 'voice':
+        file_id = context.bot.get_file(file_to_download.file_id)
+        # file_name = file_to_download.file_name
+        file_extension = "ogg"
 
     file_download_path = f"{user_download_dir}/{file_id.file_id}.{file_extension}"
 
@@ -212,6 +221,29 @@ def generate_module_selector_keyboard(language: str) -> ReplyKeyboardMarkup:
     )
 
 def generate_module_selector_video_keyboard(language: str) -> ReplyKeyboardMarkup:
+    """Create an return an instance of `module_selector_video_keyboard`
+
+
+    **Keyword arguments:**
+     - language (str) -- The desired language to generate labels
+
+    **Returns:**
+     ReplyKeyboardMarkup instance
+    """
+    return (
+        ReplyKeyboardMarkup(
+            [
+                [
+                    translate_key_to('BTN_CONVERT_VIDEO_TO_CIRCLE', language),
+                    translate_key_to('BTN_CONVERT_VIDEO_TO_GIF', language),
+                ],
+            ],
+            resize_keyboard=True,
+            one_time_keyboard=True,
+        )
+    )
+
+def generate_module_selector_voice_keyboard(language: str) -> ReplyKeyboardMarkup:
     """Create an return an instance of `module_selector_video_keyboard`
 
 

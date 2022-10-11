@@ -91,8 +91,8 @@ keys = {
               "⚠️ برای شروع لطفا یه آهنگی/فیلمی چیزی بفرست: (می‌تونی فروارد کنی یا مستقیم آپلود کنی!)"
     },
     START_OVER_MESSAGE: {
-        "en": "Send me a music and see how awesome I am!",
-        "fa": "یه موزیک برام بفرست تا ببینی چقدر خفنم!",
+        "en": "Send me a song/video and see how awesome I am!",
+        "fa": "یه آهنگی/فیلمی برام بفرست تا ببینی چقدر خفنم!",
     },
     HELP_MESSAGE: {
         "en": "It's simple! Just send or forward me an audio track, an MP3 file or a music. I'm waiting... 😁",

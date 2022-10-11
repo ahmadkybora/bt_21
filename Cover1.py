@@ -16,7 +16,7 @@ import moviepy
 import moviepy.editor 
 
 import localization as lp
-from utils.__init__1 import translate_key_to, reset_user_data_context, generate_start_over_keyboard, \
+from utils.init1 import translate_key_to, reset_user_data_context, generate_start_over_keyboard, \
 create_user_directory, download_file, increment_usage_counter_for_user, delete_file, \
 generate_module_selector_keyboard, generate_module_selector_video_keyboard, generate_tag_editor_keyboard, \
 generate_music_info, generate_tag_editor_video_keyboard, save_tags_to_file, convert_video

@@ -12,10 +12,10 @@ from telegram import (
 )
 
 import localization as lp
-from utils.__init__1 import translate_key_to, reset_user_data_context, generate_start_over_keyboard, \
+from utils import translate_key_to, reset_user_data_context, generate_start_over_keyboard, \
 create_user_directory, download_file, increment_usage_counter_for_user, delete_file, \
 generate_module_selector_keyboard, generate_module_selector_video_keyboard, generate_tag_editor_keyboard, \
-generate_music_info, generate_tag_editor_video_keyboard, save_tags_to_file
+generate_music_info, generate_tag_editor_video_keyboard, generate_module_selector_voice_keyboard, save_tags_to_file
 
 from models.user import User
 from dbConfig import db
@@ -102,6 +102,110 @@ def set_language(update: Update, context: CallbackContext) -> None:
     user.language = user_data['language']
     user.push()
 
+def handle_voice_message(update: Update, context: CallbackContext) -> None:
+    message = update.message
+    user_id = update.effective_user.id
+    user_data = context.user_data
+    voice_duration = message.voice.duration
+    voice_file_size = message.voice.file_size
+    old_voice_path = user_data['voice_path']
+    old_art_path = user_data['voice_art_path']
+    old_new_art_path = user_data['new_voice_art_path']
+    language = user_data['language']
+
+    if voice_duration >= 3600 and voice_file_size > 48000000:
+        message.reply_text(
+            translate_key_to(lp.ERR_TOO_LARGE_FILE, language),
+            reply_markup=generate_start_over_keyboard(language)
+        )
+        return
+
+    context.bot.send_chat_action(
+        chat_id=message.chat_id,
+        action=ChatAction.TYPING
+    )
+
+    try:
+        create_user_directory(user_id)
+    except OSError:
+        message.reply_text(translate_key_to(lp.ERR_CREATING_USER_FOLDER, language))
+        logger.error("Couldn't create directory for user %s", user_id, exc_info=True)
+        return
+
+    try:
+        logging.error(message.voice)
+        file_download_path = download_file(
+            user_id=user_id,
+            file_to_download=message.voice,
+            file_type='voice',
+            context=context
+        )
+    except ValueError:
+        message.reply_text(
+            translate_key_to(lp.ERR_ON_DOWNLOAD_AUDIO_MESSAGE, language),
+            reply_markup=generate_start_over_keyboard(language)
+        )
+        logger.error("Error on downloading %s's file. File type: Audio", user_id, exc_info=True)
+        return
+
+    try:
+        music = music_tag.load_file(file_download_path)
+    except (OSError, NotImplementedError):
+        message.reply_text(
+            translate_key_to(lp.ERR_ON_READING_TAGS, language),
+            reply_markup=generate_start_over_keyboard(language)
+        )
+        logger.error(
+            "Error on reading the tags %s's file. File path: %s",
+            user_id,
+            file_download_path,
+            exc_info=True
+        )
+        return
+
+    reset_user_data_context(context)
+
+    user_data['voice_path'] = file_download_path
+    user_data['art_path'] = ''
+    user_data['voice_message_id'] = message.message_id
+    user_data['voice_duration'] = message.voice.duration
+
+    # tag_editor_context = user_data['tag_editor']
+
+    # artist = music['artist']
+    # title = music['title']
+    # album = music['album']
+    # genre = music['genre']
+    # art = music['artwork']
+    # year = music.raw['year']
+    # disknumber = music.raw['disknumber']
+    # tracknumber = music.raw['tracknumber']
+
+    # if art:
+    #     art_path = user_data['art_path'] = f"{file_download_path}.jpg"
+    #     with open(art_path, 'wb') as art_file:
+    #         art_file.write(art.first.data)
+
+    # tag_editor_context['artist'] = str(artist)
+    # tag_editor_context['title'] = str(title)
+    # tag_editor_context['album'] = str(album)
+    # tag_editor_context['genre'] = str(genre)
+    # tag_editor_context['year'] = str(year)
+    # tag_editor_context['disknumber'] = str(disknumber)
+    # tag_editor_context['tracknumber'] = str(tracknumber)
+
+    show_module_selector_voice(update, context)
+
+    increment_usage_counter_for_user(user_id=user_id)
+
+    user = User.where('user_id', '=', user_id).first()
+    user.username = update.effective_user.username
+    user.push()
+
+    delete_file(old_voice_path)
+    delete_file(old_art_path)
+    delete_file(old_new_art_path)
+
 def handle_music_message(update: Update, context: CallbackContext) -> None:
     message = update.message
     user_id = update.effective_user.id
@@ -133,6 +237,7 @@ def handle_music_message(update: Update, context: CallbackContext) -> None:
         return
 
     try:
+        logging.error(message.audio)
         file_download_path = download_file(
             user_id=user_id,
             file_to_download=message.audio,
@@ -364,6 +469,19 @@ def show_module_selector_video(update: Update, context: CallbackContext) -> None
         reply_markup=module_selector_keyboard
     )
 
+def show_module_selector_voice(update: Update, context: CallbackContext) -> None:
+    user_data = context.user_data
+    context.user_data['current_active_module'] = ''
+    lang = user_data['language']
+
+    module_selector_keyboard = generate_module_selector_voice_keyboard(lang)
+
+    update.message.reply_text(
+        translate_key_to(lp.ASK_WHICH_MODULE, lang),
+        reply_to_message_id=update.effective_message.message_id,
+        reply_markup=module_selector_keyboard
+    )
+
 def handle_convert_video_message(update: Update, context: CallbackContext) -> None:
     message = update.message
     user_id = update.effective_user.id
@@ -463,6 +581,9 @@ def prepare_for_album_art(update: Update, context: CallbackContext) -> None:
         message_text = translate_key_to(lp.ASK_FOR_ALBUM_ART, context.user_data['language'])
 
     update.message.reply_text(message_text)
+
+def finish_convert_voice_to_audio(update: Update, context: CallbackContext) -> None:
+    pass
 
 def finish_convert_video(update: Update, context: CallbackContext) -> None:
     message = update.message
@@ -641,6 +762,7 @@ def main():
     add_handler(MessageHandler(Filters.audio, handle_music_message))
     add_handler(MessageHandler(Filters.photo, handle_photo_message))
     add_handler(MessageHandler(Filters.video, handle_video_message))
+    add_handler(MessageHandler(Filters.voice, handle_voice_message))
     ##########
     add_handler(MessageHandler(Filters.regex('^(🇬🇧 English)$'), set_language))
     add_handler(MessageHandler(Filters.regex('^(🇮🇷 فارسی)$'), set_language))
