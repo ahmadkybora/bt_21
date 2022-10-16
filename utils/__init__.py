@@ -85,6 +85,10 @@ def reset_user_data_context(context: CallbackContext) -> None:
 
     if 'voice_path' in user_data:
         delete_file(user_data['voice_path'])
+    if 'voice_art_path' in user_data:
+        delete_file(user_data['voice_art_path'])
+    if 'new_voice_art_path' in user_data:
+        delete_file(user_data['new_voice_art_path'])
     if 'music_path' in user_data:
         delete_file(user_data['music_path'])
     if 'art_path' in user_data:
@@ -257,8 +261,7 @@ def generate_module_selector_voice_keyboard(language: str) -> ReplyKeyboardMarku
         ReplyKeyboardMarkup(
             [
                 [
-                    translate_key_to('BTN_CONVERT_VIDEO_TO_CIRCLE', language),
-                    translate_key_to('BTN_CONVERT_VIDEO_TO_GIF', language),
+                    translate_key_to('BTN_CONVERT_VOICE_TO_AUDIO', language),
                 ],
             ],
             resize_keyboard=True,
@@ -341,3 +344,23 @@ def save_tags_to_file(file: str, tags: dict, new_art_path: str) -> str:
     music.save()
 
     return file
+
+def ffmpegcommand(inputt, output):
+    # 1) wav to mp3
+    # ffmpeg -i audio.wav -acodec libmp3lame audio.mp3
+
+    # 2) ogg to mp3
+    # ffmpeg -i audio.ogg -acodec libmp3lame audio.mp3
+
+    # 3) ac3 to mp3
+    # ffmpeg -i audio.ac3 -acodec libmp3lame audio.mp3
+
+    # 4) aac to mp3
+    # ffmpeg -i audio.aac -acodec libmp3lame audio.mp3
+
+    cmd = f'ffmpeg -i "{inputt}" -acodec libmp3lame "{output}"'
+        # cmd = f'ffmpeg -i "{inputt}" -c copy "{output}"'
+        # cmd = f'ffmpeg -i "{inputt}" "{output}"'
+    print("Command to be Executed is")
+    print(cmd)
+    return cmd

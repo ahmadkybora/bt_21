@@ -15,7 +15,8 @@ import localization as lp
 from utils import translate_key_to, reset_user_data_context, generate_start_over_keyboard, \
 create_user_directory, download_file, increment_usage_counter_for_user, delete_file, \
 generate_module_selector_keyboard, generate_module_selector_video_keyboard, generate_tag_editor_keyboard, \
-generate_music_info, generate_tag_editor_video_keyboard, generate_module_selector_voice_keyboard, save_tags_to_file
+generate_music_info, generate_tag_editor_video_keyboard, generate_module_selector_voice_keyboard, save_tags_to_file, \
+    ffmpegcommand
 
 from models.user import User
 from dbConfig import db
@@ -531,6 +532,54 @@ def handle_convert_video_message(update: Update, context: CallbackContext) -> No
             reply_markup=tag_editor_keyboard
         )
 
+def handle_convert_voice_message(update: Update, context: CallbackContext) -> None:
+    message = update.message
+    user_id = update.effective_user.id
+    user_data = context.user_data
+    voice_path = user_data['voice_path']
+    lang = user_data['language']
+
+    user_data['current_active_module'] = 'tag_editor'
+
+    tag_editor_context = user_data['tag_editor']
+    tag_editor_context['current_tag'] = ''
+
+    tag_editor_keyboard = generate_module_selector_voice_keyboard(lang)
+
+    if voice_path:
+        # with open(video_path, 'rb') as video_file:
+        #     message.reply_video_note(
+        #         video_note=video_file,
+        #         reply_to_message_id=update.effective_message.message_id,
+        #         reply_markup=tag_editor_keyboard,
+        #     )
+        try:
+            # file_download_path = download_file(
+            #     user_id=user_id,
+            #     file_to_download=message.photo[len(message.photo) - 1],
+            #     file_type='photo',
+            #     context=context
+            # )
+            reply_message = f"{translate_key_to(lp.ALBUM_ART_CHANGED, lang)} " \
+                            f"{translate_key_to(lp.CLICK_VAPREVIEW_MESSAGE, lang)} " \
+                            f"{translate_key_to(lp.OR, lang).upper()} " \
+                            f"{translate_key_to(lp.CLICK_VADONE_MESSAGE, lang).lower()}"
+            user_data['voice_path'] = voice_path
+            message.reply_text(reply_message, reply_markup=tag_editor_keyboard)
+        except (ValueError, BaseException):
+            message.reply_text(translate_key_to(lp.ERR_ON_DOWNLOAD_AUDIO_MESSAGE, lang))
+            logger.error(
+                "Error on downloading %s's file. File type: Photo",
+                user_id,
+                exc_info=True
+            )
+            return
+    else:
+        message.reply_text(
+            generate_music_info(tag_editor_context).format(f"\n🆔 {BOT_USERNAME}"),
+            reply_to_message_id=update.effective_message.message_id,
+            reply_markup=tag_editor_keyboard
+        )
 def show_module_selector(update: Update, context: CallbackContext) -> None:
     user_data = context.user_data
     context.user_data['current_active_module'] = ''
@@ -583,7 +632,62 @@ def prepare_for_album_art(update: Update, context: CallbackContext) -> None:
     update.message.reply_text(message_text)
 
 def finish_convert_voice_to_audio(update: Update, context: CallbackContext) -> None:
-    pass
+    message = update.message
+    user_data = context.user_data
+
+    context.bot.send_chat_action(
+        chat_id=update.message.chat_id,
+        action=ChatAction.UPLOAD_AUDIO
+    )
+
+    voice_path = user_data['voice_path']
+
+    lang = user_data['language']
+    voice_file = open(voice_path, 'rb').read()
+
+    start_over_button_keyboard = generate_start_over_keyboard(lang)
+
+    # try:
+    #     save_tags_to_file(
+    #         file=music_path,
+    #         tags=music_tags,
+    #         new_art_path=new_art_path
+    #     )
+    # except (OSError, BaseException):
+    #     message.reply_text(
+    #         translate_key_to(lp.ERR_ON_UPDATING_TAGS, lang),
+    #         reply_markup=start_over_button_keyboard
+    #     )
+    #     logger.error("Error on updating tags for file %s's file.", music_path, exc_info=True)
+    #     return
+
+    try:
+        with open(voice_file, 'rb') as video_file:
+            ffmpegcommand(voice_file, output)
+            message.reply_video_note(
+                video_note=video_file,
+                reply_to_message_id=update.effective_message.message_id,
+                reply_markup=start_over_button_keyboard,
+            )
+        # with open(music_path, 'rb') as music_file:
+
+        #     context.bot.send_audio(
+        #         audio=music_file,
+        #         duration=user_data['music_duration'],
+        #         chat_id=update.message.chat_id,
+        #         caption=f"🆔 {BOT_USERNAME}",
+        #         thumb=thumb,
+        #         reply_markup=start_over_button_keyboard,
+        #         reply_to_message_id=user_data['music_message_id']
+        #     )
+    except (TelegramError, BaseException) as error:
+        message.reply_text(
+            translate_key_to(lp.ERR_ON_UPLOADING, lang),
+            reply_markup=start_over_button_keyboard
+        )
+        logger.exception("Telegram error: %s", error)
+
+    reset_user_data_context(context)
 
 def finish_convert_video(update: Update, context: CallbackContext) -> None:
     message = update.message
@@ -737,6 +841,10 @@ def main():
     add_handler(CommandHandler('vdone', finish_convert_video))
     add_handler(CommandHandler('vpreview', display_preview_video))
     ##########
+    ##########
+    add_handler(CommandHandler('vadone', finish_convert_voice_to_audio))
+    add_handler(CommandHandler('vapreview', display_preview_video))
+    ##########
     add_handler(MessageHandler(
         (Filters.regex('^(🆕 New File)$') | Filters.regex('^(🆕 فایل جدید)$')),
         start_over)
@@ -749,6 +857,11 @@ def main():
     add_handler(MessageHandler(
         (Filters.regex('^(🎥 convert to circular video)$') | Filters.regex('^(🎥 تبدیل به ویدیو دایره‌ای)$')),
         handle_convert_video_message)
+    )
+    ##########
+    add_handler(MessageHandler(
+        (Filters.regex('^(🔊 convert voice to audio)$') | Filters.regex('^(🔊 تبدیل صدا به موزیک)$')),
+        handle_convert_voice_message)
     )
     ##########
     add_handler(CommandHandler('done', finish_editing_tags))

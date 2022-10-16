@@ -14,6 +14,8 @@ EXPECTED_NUMBER_MESSAGE = "EXPECTED_NUMBER_MESSAGE"
 CLICK_PREVIEW_MESSAGE = "CLICK_PREVIEW_MESSAGE"
 CLICK_DONE_MESSAGE = "CLICK_DONE_MESSAGE"
 CLICK_VPREVIEW_MESSAGE = "CLICK_VPREVIEW_MESSAGE"
+CLICK_VADONE_MESSAGE = "CLICK_VADONE_MESSAGE"
+CLICK_VAPREVIEW_MESSAGE = "CLICK_VAPREVIEW_MESSAGE"
 CLICK_VDONE_MESSAGE = "CLICK_VDONE_MESSAGE"
 LANGUAGE_CHANGED = "LANGUAGE_CHANGED"
 MUSIC_LENGTH = "MUSIC_LENGTH"
@@ -33,6 +35,7 @@ BTN_TAG_EDITOR = "BTN_TAG_EDITOR"
 BTN_CONVERT_VIDEO_TO_CIRCLE = "BTN_CONVERT_VIDEO_TO_CIRCLE"
 BTN_CONVERT_VIDEO_TO_GIF = "BTN_CONVERT_VIDEO_TO_GIF"
 BTN_MUSIC_TO_VOICE_CONVERTER = "BTN_MUSIC_TO_VOICE_CONVERTER"
+BTN_CONVERT_VOICE_TO_AUDIO = "BTN_CONVERT_VOICE_TO_AUDIO"
 BTN_ALBUM = "BTN_ALBUM"
 BTN_ALBUM_ART = "BTN_ALBUM_ART"
 BTN_BACK = "BTN_BACK"
@@ -138,6 +141,14 @@ keys = {
         "en": "Click /vdone to save your changes.",
         "fa": "روی /vdone کلیک کن تا تغییراتت ذخیره بشن.",
     },
+    CLICK_VAPREVIEW_MESSAGE: {
+        "en": "If you want to preview your changes click /vapreview.",
+        "fa": "اگر میخوای تغییرات رو تا الان ببینی از دستور /vapreview استفاده کن.",
+    },
+    CLICK_VADONE_MESSAGE: {
+        "en": "Click /vadone to save your changes.",
+        "fa": "روی /vadone کلیک کن تا تغییراتت ذخیره بشن.",
+    },
     LANGUAGE_CHANGED: {
         "en": "Language has been changed. If you want to change the language later, use /language command.",
         "fa": "زبان تغییر یافت. اگر میخواهید زبان را مجددا تغییر دهید، از دستور /language استفاده کنید.",
@@ -197,6 +208,10 @@ keys = {
     BTN_CONVERT_VIDEO_TO_GIF: {
         "en": "📷 convert video to gif",
         "fa": "📷 تبدیل ویدیو به گیف",
+    },
+    BTN_CONVERT_VOICE_TO_AUDIO: {
+        "en": "🔊 convert voice to audio",
+        "fa": "🔊 تبدیل صدا به موزیک",
     },
     BTN_ALBUM: {
         "en": "🎼 Album",
