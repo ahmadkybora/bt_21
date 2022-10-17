@@ -134,7 +134,6 @@ def handle_voice_message(update: Update, context: CallbackContext) -> None:
         return
 
     try:
-        logging.error(message.voice)
         file_download_path = download_file(
             user_id=user_id,
             file_to_download=message.voice,
@@ -580,6 +579,7 @@ def handle_convert_voice_message(update: Update, context: CallbackContext) -> No
             reply_to_message_id=update.effective_message.message_id,
             reply_markup=tag_editor_keyboard
         )
+
 def show_module_selector(update: Update, context: CallbackContext) -> None:
     user_data = context.user_data
     context.user_data['current_active_module'] = ''
@@ -645,6 +645,16 @@ def finish_convert_voice_to_audio(update: Update, context: CallbackContext) -> N
     lang = user_data['language']
     voice_file = open(voice_path, 'rb').read()
 
+    voice_path = voice_path.split("/")[-1]
+
+    mime_type = voice_path.split(".")[-1]
+    voice = voice_path.split(".")[0]
+
+    # logger.error(voice_path)
+    n_voice = ffmpegcommand(voice, mime_type)
+
+    logger.error(n_voice)
+
     start_over_button_keyboard = generate_start_over_keyboard(lang)
 
     # try:
@@ -663,7 +673,7 @@ def finish_convert_voice_to_audio(update: Update, context: CallbackContext) -> N
 
     try:
         with open(voice_file, 'rb') as video_file:
-            ffmpegcommand(voice_file, output)
+            # ffmpegcommand(voice_file, output)
             message.reply_video_note(
                 video_note=video_file,
                 reply_to_message_id=update.effective_message.message_id,

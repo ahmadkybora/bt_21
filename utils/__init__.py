@@ -1,4 +1,5 @@
 import os
+import logging
 
 from pathlib import Path
 
@@ -9,6 +10,8 @@ from telegram.ext import CallbackContext
 from models.admin import Admin
 from models.user import User
 from localization import keys
+
+logger = logging.getLogger()
 
 def translate_key_to(key: str, destination_lang: str) -> str:
     """Find the specified key in the `keys` dictionary and returns the corresponding
@@ -169,8 +172,20 @@ def download_file(user_id: int, file_to_download, file_type: str, context: Callb
         file_extension = file_name.split(".")[-1]
     elif file_type == 'voice':
         file_id = context.bot.get_file(file_to_download.file_id)
-        # file_name = file_to_download.file_name
-        file_extension = "ogg"
+        mime_type = file_to_download.mime_type
+        file_extension = mime_type.split("/")[-1]
+
+        # voice_path = voice_path.split("/")[-1]
+
+        # mime_type = voice_path.split(".")[-1]
+        # voice = voice_path.split(".")[0]
+
+        # # logger.error(voice_path)
+        new_voice = ffmpegcommand(file_id.file_id, file_extension)
+        os.system(new_voice)
+
+        logger.error(new_voice)
+        # logger.error(file_id.file_id)
 
     file_download_path = f"{user_download_dir}/{file_id.file_id}.{file_extension}"
 
@@ -345,7 +360,7 @@ def save_tags_to_file(file: str, tags: dict, new_art_path: str) -> str:
 
     return file
 
-def ffmpegcommand(inputt, output):
+def ffmpegcommand(voice, mime_type):
     # 1) wav to mp3
     # ffmpeg -i audio.wav -acodec libmp3lame audio.mp3
 
@@ -358,9 +373,34 @@ def ffmpegcommand(inputt, output):
     # 4) aac to mp3
     # ffmpeg -i audio.aac -acodec libmp3lame audio.mp3
 
-    cmd = f'ffmpeg -i "{inputt}" -acodec libmp3lame "{output}"'
+    new_mime_type = "mp3"
+    # cmd = f'ffmpeg -i "{voice}.{mime_type}" -acodec libmp3lame "{voice}.{new_mime_type}"'
         # cmd = f'ffmpeg -i "{inputt}" -c copy "{output}"'
-        # cmd = f'ffmpeg -i "{inputt}" "{output}"'
-    print("Command to be Executed is")
-    print(cmd)
+    cmd = f'ffmpeg -i "{voice}.{mime_type}" "{voice}.{new_mime_type}"'
+
+    # ffmpeg -i input.mp3 -acodec libopus output.ogg -y
+    # import os
+    # import requests
+    # import subprocess
+
+    # token = YYYYYYY
+    # chat_id = XXXXXXXX
+
+    # upload_audio_url = "https://api.telegram.org/bot%s/sendAudio?chat_id=%s" % (token, chat_id)
+    # audio_path_wav = '/Users/me/some-file.wav'
+
+    # # Convert the file from wav to ogg
+    # filename = os.path.splitext(audio_path_wav)[0]
+    # audio_path_ogg = filename + '.ogg'
+    # subprocess.run(["ffmpeg", '-i', audio_path_wav, '-acodec', 'libopus', audio_path_ogg, '-y'])
+
+    # with open(audio_path_ogg, 'rb') as f:
+    #     data = f.read()
+
+    # # An arbitrary .ogg filename has to be present so that the spectogram is shown
+    # file = {'audio': ('Message.ogg', data)}
+    # result = requests.post(upload_audio_url, files=file)
+    # https://stackoverflow.com/questions/44615991/how-convert-ogg-file-to-telegram-voice-format
+    # print("Command to be Executed is")
+    # print(cmd)
     return cmd
