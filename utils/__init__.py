@@ -1,5 +1,7 @@
 import os
 import logging
+import subprocess
+import requests
 
 from pathlib import Path
 
@@ -404,3 +406,18 @@ def ffmpegcommand(voice, mime_type):
     # print("Command to be Executed is")
     # print(cmd)
     return cmd
+
+def myffmpegcommand():
+    audio_path_wav = '/Users/me/some-file.wav'
+    # Convert the file from wav to ogg
+    filename = os.path.splitext(audio_path_wav)[0]
+    audio_path_ogg = filename + '.ogg'
+    subprocess.run(["ffmpeg", '-i', audio_path_wav, '-acodec', 'libopus', audio_path_ogg, '-y'])
+
+    with open(audio_path_ogg, 'rb') as f:
+        data = f.read()
+
+    # An arbitrary .ogg filename has to be present so that the spectogram is shown
+    file = {'audio': ('Message.ogg', data)}
+    result = requests.post(upload_audio_url, files=file)
+    return result
