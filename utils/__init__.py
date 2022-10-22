@@ -183,10 +183,10 @@ def download_file(user_id: int, file_to_download, file_type: str, context: Callb
         # voice = voice_path.split(".")[0]
 
         # # logger.error(voice_path)
-        new_voice = ffmpegcommand(file_id.file_id, file_extension)
-        os.system(new_voice)
+        # new_voice = ffmpegcommand(file_id.file_id, file_extension)
+        # os.system(new_voice)
 
-        logger.error(new_voice)
+        # logger.error(new_voice)
         # logger.error(file_id.file_id)
 
     file_download_path = f"{user_download_dir}/{file_id.file_id}.{file_extension}"
@@ -407,17 +407,27 @@ def ffmpegcommand(voice, mime_type):
     # print(cmd)
     return cmd
 
-def myffmpegcommand():
-    audio_path_wav = '/Users/me/some-file.wav'
-    # Convert the file from wav to ogg
-    filename = os.path.splitext(audio_path_wav)[0]
-    audio_path_ogg = filename + '.ogg'
-    subprocess.run(["ffmpeg", '-i', audio_path_wav, '-acodec', 'libopus', audio_path_ogg, '-y'])
+def myffmpegcommand(voice_path):
+    voice = voice_path.split(".")[0]
+    new_mime_type = ".mp3"
+    new_voice = voice + new_mime_type
+    subprocess.run(["ffmpeg", '-i', voice_path, '-acodec', 'libopus', new_voice, '-y'])
+    
+    # old_voice = voice_path.split("/")[-1]
+    # voice_path = voice_path.split("/")[0]
+    # logger.error(voice_path)
 
-    with open(audio_path_ogg, 'rb') as f:
-        data = f.read()
+    # mime_type = voice_path.split(".")[-1]
+    # voice = voice_path.split(".")[0]
+
+
+
+    # with open(new_voice, 'rb') as f:
+    #     data = f.read()
+
+    logging.error(new_voice)
 
     # An arbitrary .ogg filename has to be present so that the spectogram is shown
-    file = {'audio': ('Message.ogg', data)}
-    result = requests.post(upload_audio_url, files=file)
-    return result
+    # file = {'audio': ('Message.ogg', data)}
+    # result = requests.post(upload_audio_url, files=file)
+    # return result

@@ -16,7 +16,7 @@ from utils import translate_key_to, reset_user_data_context, generate_start_over
 create_user_directory, download_file, increment_usage_counter_for_user, delete_file, \
 generate_module_selector_keyboard, generate_module_selector_video_keyboard, generate_tag_editor_keyboard, \
 generate_music_info, generate_tag_editor_video_keyboard, generate_module_selector_voice_keyboard, save_tags_to_file, \
-    ffmpegcommand
+ffmpegcommand, myffmpegcommand
 
 from models.user import User
 from dbConfig import db
@@ -642,18 +642,22 @@ def finish_convert_voice_to_audio(update: Update, context: CallbackContext) -> N
 
     voice_path = user_data['voice_path']
 
+    myffmpegcommand(voice_path)
+
     lang = user_data['language']
-    voice_file = open(voice_path, 'rb').read()
+    # voice_file = open(voice_path, 'rb').read()
 
-    voice_path = voice_path.split("/")[-1]
+    logging.error(voice_path)
 
-    mime_type = voice_path.split(".")[-1]
-    voice = voice_path.split(".")[0]
+    # voice_path = voice_path.split("/")[-1]
 
-    # logger.error(voice_path)
-    n_voice = ffmpegcommand(voice, mime_type)
+    # mime_type = voice_path.split(".")[-1]
+    # voice = voice_path.split(".")[0]
 
-    logger.error(n_voice)
+    # # logger.error(voice_path)
+    # n_voice = ffmpegcommand(voice, mime_type)
+
+    # logger.error(n_voice)
 
     start_over_button_keyboard = generate_start_over_keyboard(lang)
 
@@ -672,10 +676,10 @@ def finish_convert_voice_to_audio(update: Update, context: CallbackContext) -> N
     #     return
 
     try:
-        with open(voice_file, 'rb') as video_file:
+        with open(voice_path, 'rb') as voice:
             # ffmpegcommand(voice_file, output)
-            message.reply_video_note(
-                video_note=video_file,
+            message.reply_voice(
+                voice=voice,
                 reply_to_message_id=update.effective_message.message_id,
                 reply_markup=start_over_button_keyboard,
             )
