@@ -642,11 +642,12 @@ def finish_convert_voice_to_audio(update: Update, context: CallbackContext) -> N
 
     voice_path = user_data['voice_path']
 
-    myffmpegcommand(voice_path)
+    myffmpegcommand(voice_path, user_data)
 
     lang = user_data['language']
     # voice_file = open(voice_path, 'rb').read()
 
+    new_voice_path = user_data['new_voice_art_path']
     logging.error(voice_path)
 
     # voice_path = voice_path.split("/")[-1]
@@ -676,7 +677,7 @@ def finish_convert_voice_to_audio(update: Update, context: CallbackContext) -> N
     #     return
 
     try:
-        with open(voice_path, 'rb') as voice:
+        with open(new_voice_path, 'rb') as voice:
             # ffmpegcommand(voice_file, output)
             message.reply_voice(
                 voice=voice,

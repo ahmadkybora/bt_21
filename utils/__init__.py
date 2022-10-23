@@ -407,12 +407,27 @@ def ffmpegcommand(voice, mime_type):
     # print(cmd)
     return cmd
 
-def myffmpegcommand(voice_path):
+def myffmpegcommand(voice_path, user_data):
     voice = voice_path.split(".")[0]
     new_mime_type = ".mp3"
     new_voice = voice + new_mime_type
-    subprocess.run(["ffmpeg", '-i', voice_path, '-acodec', 'libopus', new_voice, '-y'])
+    # subprocess.run(["ffmpeg", '-i', voice_path, '-acodec', 'libopus', new_voice, '-y'])
+    # subprocess.run(["ffmpeg -i {voice_path} -map 0:a -acodec libmp3lame {new_voice}"])
     
+    subprocess.run(["ffmpeg", "-n", "-i", voice_path, "-acodec", "libmp3lame", "-ab", "128k", new_voice])
+    user_data['new_voice_art_path'] = new_voice
+    # return
+    # codec = "libmp3lame"
+    # mp3_filename = filename + ".mp3"
+
+    # command = [self.FFMPEG_BIN,
+    #             "-n",
+    #             "-i", path,
+    #             "-acodec", codec,
+    #             "-ab", "128k",
+    #             mp3_filename
+    #             ]
+
     # old_voice = voice_path.split("/")[-1]
     # voice_path = voice_path.split("/")[0]
     # logger.error(voice_path)
@@ -425,7 +440,7 @@ def myffmpegcommand(voice_path):
     # with open(new_voice, 'rb') as f:
     #     data = f.read()
 
-    logging.error(new_voice)
+    # logging.error(new_voice)
 
     # An arbitrary .ogg filename has to be present so that the spectogram is shown
     # file = {'audio': ('Message.ogg', data)}
