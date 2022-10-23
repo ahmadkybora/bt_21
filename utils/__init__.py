@@ -416,6 +416,8 @@ def myffmpegcommand(voice_path, user_data):
     
     subprocess.run(["ffmpeg", "-n", "-i", voice_path, "-acodec", "libmp3lame", "-ab", "128k", new_voice])
     user_data['new_voice_art_path'] = new_voice
+    # delete_file(user_data['voice_path'])
+    # logging.info(user_data['new_voice_art_path'])
     # return
     # codec = "libmp3lame"
     # mp3_filename = filename + ".mp3"

@@ -648,7 +648,7 @@ def finish_convert_voice_to_audio(update: Update, context: CallbackContext) -> N
     # voice_file = open(voice_path, 'rb').read()
 
     new_voice_path = user_data['new_voice_art_path']
-    logging.error(voice_path)
+    # logging.error(new_voice_path)
 
     # voice_path = voice_path.split("/")[-1]
 
