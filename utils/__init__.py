@@ -3,6 +3,8 @@ import logging
 import subprocess
 import requests
 
+import ffmpy
+
 from pathlib import Path
 
 import music_tag
@@ -108,6 +110,8 @@ def reset_user_data_context(context: CallbackContext) -> None:
         delete_file(user_data['new_video_art_path'])
 
     new_user_data = {
+        'convert_video_to_gif': False,
+        'convert_video_to_circle': False,
         'voice_path': '',
         'voice_art_path': '',
         'new_voice_art_path': '',
@@ -448,3 +452,14 @@ def myffmpegcommand(voice_path, user_data):
     # file = {'audio': ('Message.ogg', data)}
     # result = requests.post(upload_audio_url, files=file)
     # return result
+
+def video_to_gif(video_path):
+    video = video_path.split(".")[0]
+    new_mime_type = ".gif"
+    new_video = video + new_mime_type
+
+    # subprocess.run(["ffmpeg -ss 30 -t 3 -i", video_path, "-vf", "fps=10,scale=320:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse", "-loop 0", new_video])
+    subprocess.run(["ffmpeg -i", video_path, "-vf scale=320:-1 -r 10 -f image2pipe -vcodec ppm - | convert -delay 10 -loop 0 - gif:- | convert -layers Optimize - ", new_video])
+
+    # ff = ffmpy.FFmpeg(video_path, new_video)
+    # ff.run()

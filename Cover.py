@@ -16,7 +16,7 @@ from utils import translate_key_to, reset_user_data_context, generate_start_over
 create_user_directory, download_file, increment_usage_counter_for_user, delete_file, \
 generate_module_selector_keyboard, generate_module_selector_video_keyboard, generate_tag_editor_keyboard, \
 generate_music_info, generate_tag_editor_video_keyboard, generate_module_selector_voice_keyboard, save_tags_to_file, \
-ffmpegcommand, myffmpegcommand
+ffmpegcommand, myffmpegcommand, video_to_gif
 
 from models.user import User
 from dbConfig import db
@@ -531,6 +531,57 @@ def handle_convert_video_message(update: Update, context: CallbackContext) -> No
             reply_markup=tag_editor_keyboard
         )
 
+def handle_convert_video_to_gif_message(update: Update, context: CallbackContext) -> None:
+    message = update.message
+    user_id = update.effective_user.id
+    user_data = context.user_data
+    video_path = user_data['video_path']
+    lang = user_data['language']
+
+    user_data['current_active_module'] = 'tag_editor'
+
+    tag_editor_context = user_data['tag_editor']
+    tag_editor_context['current_tag'] = ''
+
+    user_data['convert_video_to_gif'] = True
+
+    tag_editor_keyboard = generate_tag_editor_video_keyboard(lang)
+
+    if video_path:
+        # with open(video_path, 'rb') as video_file:
+        #     message.reply_video_note(
+        #         video_note=video_file,
+        #         reply_to_message_id=update.effective_message.message_id,
+        #         reply_markup=tag_editor_keyboard,
+        #     )
+        try:
+            # file_download_path = download_file(
+            #     user_id=user_id,
+            #     file_to_download=message.photo[len(message.photo) - 1],
+            #     file_type='photo',
+            #     context=context
+            # )
+            reply_message = f"{translate_key_to(lp.ALBUM_ART_CHANGED, lang)} " \
+                            f"{translate_key_to(lp.CLICK_VPREVIEW_MESSAGE, lang)} " \
+                            f"{translate_key_to(lp.OR, lang).upper()} " \
+                            f"{translate_key_to(lp.CLICK_VDONE_MESSAGE, lang).lower()}"
+            user_data['video_path'] = video_path
+            message.reply_text(reply_message, reply_markup=tag_editor_keyboard)
+        except (ValueError, BaseException):
+            message.reply_text(translate_key_to(lp.ERR_ON_DOWNLOAD_AUDIO_MESSAGE, lang))
+            logger.error(
+                "Error on downloading %s's file. File type: Photo",
+                user_id,
+                exc_info=True
+            )
+            return
+    else:
+        message.reply_text(
+            generate_music_info(tag_editor_context).format(f"\n🆔 {BOT_USERNAME}"),
+            reply_to_message_id=update.effective_message.message_id,
+            reply_markup=tag_editor_keyboard
+        )
+
 def handle_convert_voice_message(update: Update, context: CallbackContext) -> None:
     message = update.message
     user_id = update.effective_user.id
@@ -733,31 +784,58 @@ def finish_convert_video(update: Update, context: CallbackContext) -> None:
     #     )
     #     logger.error("Error on updating tags for file %s's file.", music_path, exc_info=True)
     #     return
+    covert_video_to_gif = user_data['convert_video_to_gif']
+    if covert_video_to_gif == True:
+        video_to_gif(video_path)
+        try:
+            with open(video_path, 'rb') as video_file:
+                message.reply_video(
+                    video_note=video_file,
+                    reply_to_message_id=update.effective_message.message_id,
+                    reply_markup=start_over_button_keyboard,
+                )
+            # with open(music_path, 'rb') as music_file:
 
-    try:
-        with open(video_path, 'rb') as video_file:
-            message.reply_video_note(
-                video_note=video_file,
-                reply_to_message_id=update.effective_message.message_id,
-                reply_markup=start_over_button_keyboard,
+            #     context.bot.send_audio(
+            #         audio=music_file,
+            #         duration=user_data['music_duration'],
+            #         chat_id=update.message.chat_id,
+            #         caption=f"🆔 {BOT_USERNAME}",
+            #         thumb=thumb,
+            #         reply_markup=start_over_button_keyboard,
+            #         reply_to_message_id=user_data['music_message_id']
+            #     )
+        except (TelegramError, BaseException) as error:
+            message.reply_text(
+                translate_key_to(lp.ERR_ON_UPLOADING, lang),
+                reply_markup=start_over_button_keyboard
             )
-        # with open(music_path, 'rb') as music_file:
+            logger.exception("Telegram error: %s", error)
+    else :
+        try:
+            with open(video_path, 'rb') as video_file:
+                message.reply_video_note(
+                    video_note=video_file,
+                    reply_to_message_id=update.effective_message.message_id,
+                    reply_markup=start_over_button_keyboard,
+                )
+            # with open(music_path, 'rb') as music_file:
 
-        #     context.bot.send_audio(
-        #         audio=music_file,
-        #         duration=user_data['music_duration'],
-        #         chat_id=update.message.chat_id,
-        #         caption=f"🆔 {BOT_USERNAME}",
-        #         thumb=thumb,
-        #         reply_markup=start_over_button_keyboard,
-        #         reply_to_message_id=user_data['music_message_id']
-        #     )
-    except (TelegramError, BaseException) as error:
-        message.reply_text(
-            translate_key_to(lp.ERR_ON_UPLOADING, lang),
-            reply_markup=start_over_button_keyboard
-        )
-        logger.exception("Telegram error: %s", error)
+            #     context.bot.send_audio(
+            #         audio=music_file,
+            #         duration=user_data['music_duration'],
+            #         chat_id=update.message.chat_id,
+            #         caption=f"🆔 {BOT_USERNAME}",
+            #         thumb=thumb,
+            #         reply_markup=start_over_button_keyboard,
+            #         reply_to_message_id=user_data['music_message_id']
+            #     )
+        except (TelegramError, BaseException) as error:
+            message.reply_text(
+                translate_key_to(lp.ERR_ON_UPLOADING, lang),
+                reply_markup=start_over_button_keyboard
+            )
+            logger.exception("Telegram error: %s", error)
 
     reset_user_data_context(context)
 
@@ -874,6 +952,10 @@ def main():
         handle_convert_video_message)
     )
     ##########
+    add_handler(MessageHandler(
+        Filters.regex('^(📷 convert video to gif)$') | Filters.regex('^(📷 تبدیل ویدیو به گیف)$'),
+        handle_convert_video_to_gif_message)
+    )
     add_handler(MessageHandler(
         (Filters.regex('^(🔊 convert voice to audio)$') | Filters.regex('^(🔊 تبدیل صدا به موزیک)$')),
         handle_convert_voice_message)
