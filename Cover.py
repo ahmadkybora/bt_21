@@ -790,7 +790,7 @@ def finish_convert_video(update: Update, context: CallbackContext) -> None:
         try:
             with open(video_path, 'rb') as video_file:
                 message.reply_video(
-                    video_note=video_file,
+                    video=video_file,
                     reply_to_message_id=update.effective_message.message_id,
                     reply_markup=start_over_button_keyboard,
                 )

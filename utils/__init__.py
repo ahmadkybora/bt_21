@@ -7,6 +7,8 @@ import ffmpy
 
 from pathlib import Path
 
+from moviepy.editor import *
+
 import music_tag
 from telegram import ReplyKeyboardMarkup
 from telegram.ext import CallbackContext
@@ -458,8 +460,23 @@ def video_to_gif(video_path):
     new_mime_type = ".gif"
     new_video = video + new_mime_type
 
-    # subprocess.run(["ffmpeg -ss 30 -t 3 -i", video_path, "-vf", "fps=10,scale=320:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse", "-loop 0", new_video])
-    subprocess.run(["ffmpeg -i", video_path, "-vf scale=320:-1 -r 10 -f image2pipe -vcodec ppm - | convert -delay 10 -loop 0 - gif:- | convert -layers Optimize - ", new_video])
+    # logging.error(new_video)
+    # subprocess(["ffmpeg -f gif -i " {video_path outfile.mp4}])
+    # subprocess.run(["ffmpeg", "-i", video_path, "-c:v", "libvpx", "-crf", "12", "-b:v", "500K", new_video])
+    # subprocess.run(["ffmpeg", "-f", "gif", "-i", video_path, new_video])
+    subprocess.run(["ffmpeg", "-i", video_path, "-movflags", "faststart", "-pix_fmt", "yuv420p", "-vf", "scale=trunc(iw/2)*2:trunc(ih/2)*2", new_video])
+    # subprocess.run(["ffmpeg", "-stream_loop 5", "-i", video_path, "-y;ffmpeg", "-i" loop.gif -pix_fmt yuv420p -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" loop.mp4 -y"])
+    # try:
+    #     with open(video_path, 'rb') as video_file:
+    #         clip = (VideoFileClip(video_file)
+    #         .subclip((1,22.65),(1,23.2))
+    #         .resize(0.3))
+    #         clip.write_gif(new_video)
 
-    # ff = ffmpy.FFmpeg(video_path, new_video)
-    # ff.run()
+    # except (BaseException) as error:
+    #     logger.exception("Telegram error: %s", error)
+
+    # subprocess.run(["ffmpeg -ss 30 -t 3 -i", video_path, "-vf", "fps=10,scale=320:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse", "-loop 0", new_video])
+    # subprocess.run(["ffmpeg -i", video_path, "-vf scale=320:-1 -r 10 -f image2pipe -vcodec ppm - | convert -delay 10 -loop 0 - gif:- | convert -layers Optimize - ", new_video])
+
+    # subprocess.run([video_path, new_video])
