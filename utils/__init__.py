@@ -110,6 +110,8 @@ def reset_user_data_context(context: CallbackContext) -> None:
         delete_file(user_data['video_art_path'])
     if 'new_video_art_path' in user_data:
         delete_file(user_data['new_video_art_path'])
+    if 'gif' in user_data:
+        delete_file(user_data['gif'])
 
     new_user_data = {
         'convert_video_to_gif': False,
@@ -120,6 +122,7 @@ def reset_user_data_context(context: CallbackContext) -> None:
         'video_path': '',
         'video_art_path': '',
         'new_video_art_path': '',
+        'gif': '',
         'video_message_id': '',
         'video_duration': '',
         'tag_editor': {},
@@ -455,16 +458,23 @@ def myffmpegcommand(voice_path, user_data):
     # result = requests.post(upload_audio_url, files=file)
     # return result
 
-def video_to_gif(video_path):
+def video_to_gif(video_path, user_data):
     video = video_path.split(".")[0]
     new_mime_type = ".gif"
-    new_video = video + new_mime_type
+    gif = video + new_mime_type
 
     # logging.error(new_video)
+    # subprocess.run(["ffmpeg", "-i", video_path, "-pix_fmt", "rgb24", gif])
+    # subprocess.run(["ffmpeg", "-i", video_path, "-movflags", "faststart", "-pix_fmt", "yuv420p", "-vf", "scale=trunc(iw/2)*2:trunc(ih/2)*2", gif])
+    subprocess.run(["ffmpeg", "-ss", "00:00:00.000", "-i", video_path, "-pix_fmt", "rgb24", "-r", "10", "-s", "320x240", "-t", "00:00:10.000", gif])
+    user_data['gif'] = gif
+
+
     # subprocess(["ffmpeg -f gif -i " {video_path outfile.mp4}])
-    # subprocess.run(["ffmpeg", "-i", video_path, "-c:v", "libvpx", "-crf", "12", "-b:v", "500K", new_video])
-    # subprocess.run(["ffmpeg", "-f", "gif", "-i", video_path, new_video])
-    subprocess.run(["ffmpeg", "-i", video_path, "-movflags", "faststart", "-pix_fmt", "yuv420p", "-vf", "scale=trunc(iw/2)*2:trunc(ih/2)*2", new_video])
+    # subprocess.run(["ffmpeg", "-i", video_path, "-c:v", "libvpx", "-crf", "12", "-b:v", "500K", gif])
+    # subprocess.run(["ffmpeg", "-f", "gif", "-i", video_path, gif])
+    # subprocess.run(["ffmpeg", "-i", video_path, "-movflags", "faststart", "-pix_fmt", "yuv420p", "-vf", "scale=trunc(iw/2)*2:trunc(ih/2)*2", gif])
+    # subprocess.run(["ffmpeg", "-ss", "00:01:30", "-t", "5", "-i", video_path, "-filter_complex", "[0:v] fps=10,scale=720:-1 [new];[new][1:v] paletteuse", gif])
     # subprocess.run(["ffmpeg", "-stream_loop 5", "-i", video_path, "-y;ffmpeg", "-i" loop.gif -pix_fmt yuv420p -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" loop.mp4 -y"])
     # try:
     #     with open(video_path, 'rb') as video_file:

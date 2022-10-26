@@ -482,6 +482,56 @@ def show_module_selector_voice(update: Update, context: CallbackContext) -> None
         reply_markup=module_selector_keyboard
     )
 
+def handle_download_message(update: Update, context: CallbackContext) -> None:
+    message = update.message
+    logging.info(message)
+    # user_id = update.effective_user.id
+    # user_data = context.user_data
+    # voice_path = user_data['voice_path']
+    # lang = user_data['language']
+
+    # user_data['current_active_module'] = 'tag_editor'
+
+    # tag_editor_context = user_data['tag_editor']
+    # tag_editor_context['current_tag'] = ''
+
+    # tag_editor_keyboard = generate_module_selector_voice_keyboard(lang)
+
+    # if voice_path:
+    #     # with open(video_path, 'rb') as video_file:
+    #     #     message.reply_video_note(
+    #     #         video_note=video_file,
+    #     #         reply_to_message_id=update.effective_message.message_id,
+    #     #         reply_markup=tag_editor_keyboard,
+    #     #     )
+    #     try:
+    #         # file_download_path = download_file(
+    #         #     user_id=user_id,
+    #         #     file_to_download=message.photo[len(message.photo) - 1],
+    #         #     file_type='photo',
+    #         #     context=context
+    #         # )
+    #         reply_message = f"{translate_key_to(lp.ALBUM_ART_CHANGED, lang)} " \
+    #                         f"{translate_key_to(lp.CLICK_VAPREVIEW_MESSAGE, lang)} " \
+    #                         f"{translate_key_to(lp.OR, lang).upper()} " \
+    #                         f"{translate_key_to(lp.CLICK_VADONE_MESSAGE, lang).lower()}"
+    #         user_data['voice_path'] = voice_path
+    #         message.reply_text(reply_message, reply_markup=tag_editor_keyboard)
+    #     except (ValueError, BaseException):
+    #         message.reply_text(translate_key_to(lp.ERR_ON_DOWNLOAD_AUDIO_MESSAGE, lang))
+    #         logger.error(
+    #             "Error on downloading %s's file. File type: Photo",
+    #             user_id,
+    #             exc_info=True
+    #         )
+    #         return
+    # else:
+    #     message.reply_text(
+    #         generate_music_info(tag_editor_context).format(f"\n🆔 {BOT_USERNAME}"),
+    #         reply_to_message_id=update.effective_message.message_id,
+    #         reply_markup=tag_editor_keyboard
+    #     )
+
 def handle_convert_video_message(update: Update, context: CallbackContext) -> None:
     message = update.message
     user_id = update.effective_user.id
@@ -761,7 +811,7 @@ def finish_convert_video(update: Update, context: CallbackContext) -> None:
 
     context.bot.send_chat_action(
         chat_id=update.message.chat_id,
-        action=ChatAction.UPLOAD_AUDIO
+        action=ChatAction.UPLOAD_VIDEO
     )
 
     video_path = user_data['video_path']
@@ -786,7 +836,7 @@ def finish_convert_video(update: Update, context: CallbackContext) -> None:
     #     return
     covert_video_to_gif = user_data['convert_video_to_gif']
     if covert_video_to_gif == True:
-        video_to_gif(video_path)
+        video_to_gif(video_path, user_data)
         try:
             with open(video_path, 'rb') as video_file:
                 message.reply_video(
@@ -973,6 +1023,8 @@ def main():
     add_handler(MessageHandler(Filters.photo, handle_photo_message))
     add_handler(MessageHandler(Filters.video, handle_video_message))
     add_handler(MessageHandler(Filters.voice, handle_voice_message))
+    add_handler(MessageHandler(Filters.entity(URL), handle_download_message))
+    # add_handler(MessageHandler(Filters.text, handle_download_message))
     ##########
     add_handler(MessageHandler(Filters.regex('^(🇬🇧 English)$'), set_language))
     add_handler(MessageHandler(Filters.regex('^(🇮🇷 فارسی)$'), set_language))
