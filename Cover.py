@@ -484,7 +484,23 @@ def show_module_selector_voice(update: Update, context: CallbackContext) -> None
 
 def handle_download_message(update: Update, context: CallbackContext) -> None:
     message = update.message
-    logging.info(message)
+    user_id = update.effective_user.id
+    # user_data = context.user_data
+    # voice_duration = message.voice.duration
+    # voice_file_size = message.voice.file_size
+    # old_voice_path = user_data['voice_path']
+    # old_art_path = user_data['voice_art_path']
+    # old_new_art_path = user_data['new_voice_art_path']
+    # language = user_data['language']
+
+    # if voice_duration >= 3600 and voice_file_size > 48000000:
+    #     message.reply_text(
+    #         translate_key_to(lp.ERR_TOO_LARGE_FILE, language),
+    #         reply_markup=generate_start_over_keyboard(language)
+    #     )
+    #     return
+
+    context.bot.send_document(user_id, message.text)
     # user_id = update.effective_user.id
     # user_data = context.user_data
     # voice_path = user_data['voice_path']
@@ -1023,7 +1039,7 @@ def main():
     add_handler(MessageHandler(Filters.photo, handle_photo_message))
     add_handler(MessageHandler(Filters.video, handle_video_message))
     add_handler(MessageHandler(Filters.voice, handle_voice_message))
-    add_handler(MessageHandler(Filters.entity(URL), handle_download_message))
+    add_handler(MessageHandler(Filters.entity("url"), handle_download_message))
     # add_handler(MessageHandler(Filters.text, handle_download_message))
     ##########
     add_handler(MessageHandler(Filters.regex('^(🇬🇧 English)$'), set_language))
